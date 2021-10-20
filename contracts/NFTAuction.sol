@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 // import ERC721 iterface
-import "./ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 // NFTs smart contract inherits ERC721 interface
-contract NFTs is ERC721 {
+contract NFTAuction is ERC721URIStorage{
 
     // this contract's token collection name
     string public collectionName;
@@ -85,7 +85,7 @@ contract NFTs is ERC721 {
 
     modifier tokenExist(uint256 _tokenID) {
         require(
-            _exist(_tokenID),
+            _exists(_tokenID),
             "Token ID does not exist."
         );
         _;
@@ -119,7 +119,7 @@ contract NFTs is ERC721 {
             _tokenURI,
             payable(msg.sender),
             payable(msg.sender),
-            address(0),
+            payable(address(0)),
             _price,
             0,
             false
@@ -140,29 +140,19 @@ contract NFTs is ERC721 {
       return tokenMetaData;
     }
   
-    // get total number of tokens minted so far
-    function getNumberOfTokensMinted() public view returns(uint256) {
-      uint256 totalNumberOfTokensMinted = totalSupply();
-      return totalNumberOfTokensMinted;
-    }
+    // // get total number of tokens minted so far
+    // function getNumberOfTokensMinted() public view returns(uint256) {
+    //   uint256 totalNumberOfTokensMinted = totalSupply();
+    //   return totalNumberOfTokensMinted;
+    // }
   
     // get total number of tokens owned by an address
-    function getTotalNumberOfTokensOwnedByAnAddress(address _owner)   public view returns(uint256) {
+    function getTotalNumberOfTokensOwnedByAnAddress(address _owner) public view returns(uint256) {
       uint256 totalNumberOfTokensOwned = balanceOf(_owner);
       return totalNumberOfTokensOwned;
     }
-
-    // struct Auction {
-    //     uint256 minBid;
-    //     address payable highestBidder;
-    //     uint256 highestBid;
-    //     uint endTime;
-    //     bool ended;
-    //     bool claimed;
-    // }
   
-    function beginAuction(uint256 _tokenID, uint256 _minBid, uint _endTime) tokenExist(_tokenID) isOwner(_tokenID) returns (bool success) {
-        if (!getTokenExists(_tokenID))
+    function beginAuction(uint256 _tokenID, uint256 _minBid, uint _endTime) tokenExist(_tokenID) isOwner(_tokenID) public returns (bool success) {
         NFT memory nft = allNFTs[_tokenID];
         nft.onSale = true;
         Auction memory newAuction = Auction(
@@ -174,23 +164,23 @@ contract NFTs is ERC721 {
             false
         );
 
-        allNfts[_tokenID] = nft;
+        allNFTs[_tokenID] = nft;
         AuctionsOfNFT[_tokenID] = newAuction;
         return true;
     }
 
-    function increaseBid(uint256 _tokenID, uint256 newBid) tokenExist(_tokenID) notOwner(_tokenID) notEnded(_tokenID) returns (bool success) {
+    function increaseBid(uint256 _tokenID, uint256 newBid) tokenExist(_tokenID) notOwner(_tokenID) notEnded(_tokenID) public returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
         if (newBid <= auction.highestBid) revert();
         
         fundsByBidder[_tokenID][msg.sender] = newBid;
-        auction.highestBidder = msg.sender;
-        auction.higherBid = newBid;
+        auction.highestBidder = payable(msg.sender);
+        auction.highestBid = newBid;
         AuctionsOfNFT[_tokenID] = auction;
         return true;
     }
 
-    function endAuction(uint256 _tokenID) tokenExist(_tokenID) returns (bool success) {
+    function endAuction(uint256 _tokenID) tokenExist(_tokenID) public returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
         if (block.timestamp < auction.endTime) revert();
 
@@ -198,12 +188,12 @@ contract NFTs is ERC721 {
         nft.onSale = false;
         auction.ended = true;
 
-        allNfts[_tokenID] = nft;
-        AuctionsOfNFT[_tokenID] = newAuction;
+        allNFTs[_tokenID] = nft;
+        AuctionsOfNFT[_tokenID] = auction;
         return true;
     }
 
-    function withdraw(uint256 _tokenID) tokenExist(_tokenID) notOwner(_tokenID) returns (bool success) {
+    function withdraw(uint256 _tokenID) public tokenExist(_tokenID) notOwner(_tokenID) returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
         if (!auction.ended) revert();
         if (msg.sender == auction.highestBidder) revert();
@@ -211,13 +201,13 @@ contract NFTs is ERC721 {
         uint withdrawAmount;
 
         withdrawAccount = payable(msg.sender);
-        withdraqAmount = fundsByBidder[_tokenID][withdrawAccount];
+        withdrawAmount = fundsByBidder[_tokenID][withdrawAccount];
 
         if (withdrawAmount == 0) revert();
 
-        fundsByVBidder[_tokenID][withdrawAccount] = 0;
+        fundsByBidder[_tokenID][withdrawAccount] = 0;
         if (!payable(msg.sender).send(withdrawAmount)) {
-            undsByVBidder[_tokenID][withdrawAccount] = withdrawAmount;
+            fundsByBidder[_tokenID][withdrawAccount] = withdrawAmount;
             return false;
         }
         return true;
@@ -229,18 +219,18 @@ contract NFTs is ERC721 {
         require(!auction.claimed);
         require(msg.sender == auction.highestBidder);
         // get the token's owner
-        address tokenOwner = ownerOf(_tokenId);
+        address tokenOwner = ownerOf(_tokenID);
         // token's owner should not be an zero address account
         require(tokenOwner != address(0));
 
         NFT memory nft = allNFTs[_tokenID];
         _transfer(tokenOwner, msg.sender, _tokenID);
         // get owner of the token
-        address payable sendTo = cryptoboy.currentOwner;
+        address payable sendTo = nft.currentOwner;
         // send token's worth of ethers to the owner
         sendTo.transfer(msg.value);
         nft.previousOwner = nft.currentOwner;
-        nft.currentOwner = msg.sender;
+        nft.currentOwner = payable(msg.sender);
         nft.price = auction.highestBid;
         nft.transNum++;
         allNFTs[_tokenID] = nft;
