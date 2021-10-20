@@ -1,174 +1,249 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
+// import ERC721 iterface
+import "./ERC721.sol";
 
-contract NFTAuction is ERC721 {
-    // using SafeMath for uint256;
-    // 拍卖的参数。
-    address payable public beneficiary;
-    // 时间是unix的绝对时间戳（自1970-01-01以来的秒数）
-    // 或以秒为单位的时间段。
-    uint public endTime;
+// NFTs smart contract inherits ERC721 interface
+contract NFTs is ERC721 {
 
-    struct NFTItem {
-        address payable owner;
+    // this contract's token collection name
+    string public collectionName;
+    // this contract's token symbol
+    string public collectionNameSymbol;
+    // total number of crypto boys minted
+    uint256 public NFTCounter;
+
+    struct NFT {
+        uint256 tokenID;
+        string tokenName;
+        string tokenURI;
+        address payable mintedBy;
+        address payable currentOwner;
+        address payable previousOwner;
+        uint256 price;
+        uint256 transNum;
+        bool onSale;
+    }
+
+    struct Auction {
         uint256 minBid;
-        string ipfsURL;
-        bool exist;
-    }
-
-    uint256 public _tokenIDs;
-    uint256 public _NFTItemIDs;
-
-    mapping(uint256 => NFTItem) private _NFTItems;
-
-    struct BID {
         address payable highestBidder;
-        uint highestBid;
+        uint256 highestBid;
+        uint endTime;
+        bool ended;
+        bool claimed;
     }
 
-    mapping(uint256 => mapping(address => uint256)) public fundsByBidder; //map tokenid to fundsByBidder
-    mapping(uint256 => BID) public Bid; 
+    mapping(uint256 => NFT) private allNFTs;
+    mapping(uint256 => Auction) public AuctionsOfNFT;
+    mapping(uint256 => mapping(address => uint256)) public fundsByBidder; //map tokenID to fundsByBidder
 
-    // 拍卖结束后设为 true，将禁止所有的变更
-    bool ended;
+    // check if token name exists
+    mapping(string => bool) public tokenNameExists;
+    // check if token URI exists
+    mapping(string => bool) public tokenURIExists;
 
-    // 变更触发的事件
-    event HighestBidIncreased(address bidder, uint amount);
-    event BidWithdrawed(address withdrawer, uint amount);
-    event AuctionEnded(address winner, uint amount);
-
-    // 以下是所谓的 natspec 注释，可以通过三个斜杠来识别。
-    // 当用户被要求确认交易时将显示。
-
-    /// 以受益者地址 `_beneficiary` 的名义，
-    /// 创建一个简单的拍卖，拍卖时间为 `_biddingTime` 秒。
-    constructor(
-        uint _biddingTime
-    ) public ERC721("DART", "ART")
-    {
-        beneficiary = payable(msg.sender);
-        endTime = block.timestamp + _biddingTime;
+    // initialize contract while deployment with contract's collection name and token
+    constructor() ERC721("NFT Collection", "NFT") {
+        collectionName = name();
+        collectionNameSymbol = symbol();
     }
 
-    modifier notEnded() {
+    modifier notZeroAddress() {
         require(
-            block.timestamp <= endTime,
+            msg.sender != address(0),
+            "The fucntion caller is zero address account."
+        );
+        _;
+    }
+
+    modifier isOwner(uint256 _tokenID) {
+        require(
+            msg.sender == ownerOf(_tokenID),
+            "Only owner can call this function."
+        );
+        _;
+    }
+
+    modifier notOwner(uint256 _tokenID) {
+        require(
+            msg.sender != ownerOf(_tokenID),
+            "Owner cannot call this function."
+        );
+        _;
+    }
+
+    modifier notEnded(uint256 _tokenID) {
+        Auction memory auction = AuctionsOfNFT[_tokenID];
+        require(
+            block.timestamp <= auction.endTime,
             "Auction already ended."
         );
         _;
     }
 
-    modifier higherBid(uint256 ID) {
-        NFTItem memory nftItem = _NFTItems[ID];
-        if (msg.value < nftItem.minBid) revert();
-        _;
-    }
-
-    modifier NFTItemExist(uint ID) {
+    modifier tokenExist(uint256 _tokenID) {
         require(
-            _NFTItems[ID].exist,
-            "NFT item not found."
+            _exist(_tokenID),
+            "Token ID does not exist."
         );
         _;
     }
 
-    modifier isOwner(uint256 ID) {
-        NFTItem memory nftItem = _NFTItems[ID];
-        if (msg.sender != nftItem.owner) revert();
-        _;
+    // mint a new NFT
+    function mintNFT(string memory _name, string memory  _tokenURI, uint256 _price) external notZeroAddress {
+        // increment counter
+        NFTCounter++;
+        // check if a token exists with the above token id =>   incremented counter
+        require(!_exists(NFTCounter));
+        // check if the token URI already exists or not
+        require(!tokenURIExists[_tokenURI]);
+        // check if the token name already exists or not
+        require(!tokenNameExists[_name]);
+    
+        // mint the token
+        _safeMint(msg.sender, NFTCounter);
+        // set token URI (bind token id with the passed in token URI)
+        _setTokenURI(NFTCounter, _tokenURI);
+    
+        // make passed token URI as exists
+        tokenURIExists[_tokenURI] = true;
+        // make token name passed as exists
+        tokenNameExists[_name] = true;
+    
+        // creat a new NFT (struct) and pass in new values
+        NFT memory newNFT = NFT(
+            NFTCounter,
+            _name,
+            _tokenURI,
+            payable(msg.sender),
+            payable(msg.sender),
+            address(0),
+            _price,
+            0,
+            false
+        );
+        // add the token id and it's NFT to all NFTs mapping
+        allNFTs[NFTCounter] = newNFT;
+    }
+  
+    // get owner of the token
+    function getTokenOwner(uint256 _tokenID) public view returns  (address) {
+        address _tokenOwner = ownerOf(_tokenID);
+        return _tokenOwner;
+    }
+  
+    // get metadata of the token
+    function getTokenMetaData(uint _tokenID) public view returns  (string memory) {
+      string memory tokenMetaData = tokenURI(_tokenID);
+      return tokenMetaData;
+    }
+  
+    // get total number of tokens minted so far
+    function getNumberOfTokensMinted() public view returns(uint256) {
+      uint256 totalNumberOfTokensMinted = totalSupply();
+      return totalNumberOfTokensMinted;
+    }
+  
+    // get total number of tokens owned by an address
+    function getTotalNumberOfTokensOwnedByAnAddress(address _owner)   public view returns(uint256) {
+      uint256 totalNumberOfTokensOwned = balanceOf(_owner);
+      return totalNumberOfTokensOwned;
     }
 
-    modifier notOwner(uint256 ID) {
-        NFTItem memory nftItem = _NFTItems[ID];
-        if (msg.sender == nftItem.owner) revert();
-        _;
-    }
-
-    function addNFTItem(uint256 minBid, string memory ipfsURL) public {
-        require(
-            minBid > 0,
-            "The starting price should be greater than 0."
+    // struct Auction {
+    //     uint256 minBid;
+    //     address payable highestBidder;
+    //     uint256 highestBid;
+    //     uint endTime;
+    //     bool ended;
+    //     bool claimed;
+    // }
+  
+    function beginAuction(uint256 _tokenID, uint256 _minBid, uint _endTime) tokenExist(_tokenID) isOwner(_tokenID) returns (bool success) {
+        if (!getTokenExists(_tokenID))
+        NFT memory nft = allNFTs[_tokenID];
+        nft.onSale = true;
+        Auction memory newAuction = Auction(
+            _minBid,
+            payable(msg.sender),
+            _minBid,
+            _endTime,
+            false,
+            false
         );
 
-        _NFTItemIDs++;
-        _NFTItems[_NFTItemIDs] = NFTItem(payable(msg.sender), minBid, ipfsURL, true);
-    }
-
-    function getNFTItem(uint256 ID) public view NFTItemExist(ID)
-    returns(uint256, uint256, string memory, uint256) {
-        NFTItem memory nftItem = _NFTItems[ID];
-        BID memory bid = Bid[ID];
-        return(ID, nftItem.minBid, nftItem.ipfsURL, bid.highestBid);
-    }
-
-    /// 对拍卖进行出价，具体的出价随交易一起发送。
-    /// 如果没有在拍卖中胜出，则返还出价。
-    function increaseBid(uint256 ID) public payable notEnded notOwner(ID) higherBid(ID) 
-    returns(bool succes) {
-        BID storage bid = Bid[ID];
-
-        if (msg.value <= bid.highestBid) revert();
-
-        fundsByBidder[ID][msg.sender] = msg.value;
-
-        bid.highestBidder = payable(msg.sender);
-        bid.highestBid = msg.value;
-
-        emit HighestBidIncreased(msg.sender, msg.value);
-
+        allNfts[_tokenID] = nft;
+        AuctionsOfNFT[_tokenID] = newAuction;
         return true;
     }
 
-    /// 取回出价（当该出价已被超越）
-    function withdraw(uint256 ID) public payable notOwner(ID)
-    returns(bool success) {
-        BID storage bid = Bid[ID];
-        uint amount;
-        if (msg.sender != bid.highestBidder) {
-            amount = fundsByBidder[ID][msg.sender];
-        } 
+    function increaseBid(uint256 _tokenID, uint256 newBid) tokenExist(_tokenID) notOwner(_tokenID) notEnded(_tokenID) returns (bool success) {
+        Auction memory auction = AuctionsOfNFT[_tokenID];
+        if (newBid <= auction.highestBid) revert();
+        
+        fundsByBidder[_tokenID][msg.sender] = newBid;
+        auction.highestBidder = msg.sender;
+        auction.higherBid = newBid;
+        AuctionsOfNFT[_tokenID] = auction;
+        return true;
+    }
 
-        if (amount <= 0) revert();
+    function endAuction(uint256 _tokenID) tokenExist(_tokenID) returns (bool success) {
+        Auction memory auction = AuctionsOfNFT[_tokenID];
+        if (block.timestamp < auction.endTime) revert();
 
-        fundsByBidder[ID][msg.sender] = 0;
+        NFT memory nft = allNFTs[_tokenID];
+        nft.onSale = false;
+        auction.ended = true;
 
-        if (!payable(msg.sender).send(amount)) {
-            fundsByBidder[ID][msg.sender] = amount;
+        allNfts[_tokenID] = nft;
+        AuctionsOfNFT[_tokenID] = newAuction;
+        return true;
+    }
+
+    function withdraw(uint256 _tokenID) tokenExist(_tokenID) notOwner(_tokenID) returns (bool success) {
+        Auction memory auction = AuctionsOfNFT[_tokenID];
+        if (!auction.ended) revert();
+        if (msg.sender == auction.highestBidder) revert();
+        address payable withdrawAccount;
+        uint withdrawAmount;
+
+        withdrawAccount = payable(msg.sender);
+        withdraqAmount = fundsByBidder[_tokenID][withdrawAccount];
+
+        if (withdrawAmount == 0) revert();
+
+        fundsByVBidder[_tokenID][withdrawAccount] = 0;
+        if (!payable(msg.sender).send(withdrawAmount)) {
+            undsByVBidder[_tokenID][withdrawAccount] = withdrawAmount;
             return false;
         }
-
-        emit BidWithdrawed(msg.sender, amount);
         return true;
     }
 
-    /// 结束拍卖，并把最高的出价发送给受益人
-    function auctionEnd(uint256 ID) public {
-        // 对于可与其他合约交互的函数（意味着它会调用其他函数或发送以太币），
-        // 一个好的指导方针是将其结构分为三个阶段：
-        // 1. 检查条件
-        // 2. 执行动作 (可能会改变条件)
-        // 3. 与其他合约交互
-        // 如果这些阶段相混合，其他的合约可能会回调当前合约并修改状态，
-        // 或者导致某些效果（比如支付以太币）多次生效。
-        // 如果合约内调用的函数包含了与外部合约的交互，
-        // 则它也会被认为是与外部合约有交互的。
+    function claimNFT(uint256 _tokenID) public payable tokenExist(_tokenID) notZeroAddress returns (bool success) {
+        Auction memory auction = AuctionsOfNFT[_tokenID];
+        require(auction.ended);
+        require(!auction.claimed);
+        require(msg.sender == auction.highestBidder);
+        // get the token's owner
+        address tokenOwner = ownerOf(_tokenId);
+        // token's owner should not be an zero address account
+        require(tokenOwner != address(0));
 
-        NFTItem storage nftItem = _NFTItems[ID];
-        BID memory bid = Bid[ID];
-
-        // 1. 条件
-        require(block.timestamp >= endTime, "Auction not yet ended.");
-        require(!ended, "auctionEnd has already been called.");
-
-        // 2. 生效
-        ended = true;
-        emit AuctionEnded(bid.highestBidder, bid.highestBid);
-
-        // 3. 交互
-        nftItem.owner = bid.highestBidder;
-        beneficiary.transfer(bid.highestBid);
+        NFT memory nft = allNFTs[_tokenID];
+        _transfer(tokenOwner, msg.sender, _tokenID);
+        // get owner of the token
+        address payable sendTo = cryptoboy.currentOwner;
+        // send token's worth of ethers to the owner
+        sendTo.transfer(msg.value);
+        nft.previousOwner = nft.currentOwner;
+        nft.currentOwner = msg.sender;
+        nft.price = auction.highestBid;
+        nft.transNum++;
+        allNFTs[_tokenID] = nft;
+        return true;
     }
 }
