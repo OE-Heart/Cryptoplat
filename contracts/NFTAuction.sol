@@ -35,7 +35,7 @@ contract NFTAuction is ERC721URIStorage{
         bool claimed;
     }
 
-    mapping(uint256 => NFT) private allNFTs;
+    mapping(uint256 => NFT) public allNFTs;
     mapping(uint256 => Auction) public AuctionsOfNFT;
     mapping(uint256 => mapping(address => uint256)) public fundsByBidder; //map tokenID to fundsByBidder
 
@@ -140,11 +140,11 @@ contract NFTAuction is ERC721URIStorage{
       return tokenMetaData;
     }
   
-    // // get total number of tokens minted so far
-    // function getNumberOfTokensMinted() public view returns(uint256) {
-    //   uint256 totalNumberOfTokensMinted = totalSupply();
-    //   return totalNumberOfTokensMinted;
-    // }
+    // get total number of tokens minted so far
+    function getNumberOfTokensMinted() public view returns(uint256) {
+      uint256 totalNumberOfTokensMinted = NFTCounter;
+      return totalNumberOfTokensMinted;
+    }
   
     // get total number of tokens owned by an address
     function getTotalNumberOfTokensOwnedByAnAddress(address _owner) public view returns(uint256) {

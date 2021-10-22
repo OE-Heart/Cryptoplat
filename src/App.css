@@ -1,4 +1,5 @@
-.App {
+/* @import '~antd/dist/antd.css'; */
+/* .App {
   text-align: center;
 }
 
@@ -35,4 +36,11 @@
   to {
     transform: rotate(360deg);
   }
+} */
+input::-webkit-input-placeholder {
+  font-size: 1rem;
+}
+
+input[type="color"]:hover {
+  cursor: pointer;
 }
