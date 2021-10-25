@@ -133,6 +133,7 @@ class App extends React.Component {
                                 accountAddress={this.state.accountAddress}
                                 NFTs={this.state.NFTs}
                                 NFTNum={this.state.NFTNum}
+                                NFTContract={this.state.NFTContract}
                             />
                         )}
                     />
@@ -154,6 +155,7 @@ class App extends React.Component {
                                 accountAddress={this.state.accountAddress}
                                 NFTs={this.state.NFTs}
                                 NFTNumOfAccount={this.state.NFTNumOfAccount}
+                                NFTContract={this.state.NFTContract}
                             />
                         )}
                     />

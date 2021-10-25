@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Loading from "../Loading/Loading";
+import NFTinfo from "./NFTinfo";
 
 const Marketplace = ({
     NFTs,
     accountAddress,
     NFTNum,
+    NFTContract,
 }) => {
     const [loading, setLoading] = useState(false);
 
@@ -27,6 +29,23 @@ const Marketplace = ({
                         Total number of NFTs on the platform : {NFTNum}
                     </h5>
                 </div>
+            </div>
+            <div className="d-flex flex-wrap mb-2">
+                {NFTs.map((NFT) => {
+                    return (
+                        <div
+                            key={NFT.tokenID}
+                            className="w-50 p-4 mt-1 border"
+                        >
+                            <img src={NFT.tokenURI} id="preview_img" width="150px" height="200px" alt=""/>
+                            <NFTinfo
+                                NFT={NFT}
+                                accountAddress={accountAddress}
+                                NFTContract={NFTContract}
+                            />
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )

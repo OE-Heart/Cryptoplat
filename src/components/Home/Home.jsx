@@ -12,7 +12,7 @@ const Home = ({ accountAddress, accountBalance }) => {
           <p className="lead">Account Address :</p>
           <h4>{accountAddress}</h4>
           <p className="lead">Account Balance :</p>
-          <h4>{accountBalance}</h4>
+          <h4>{accountBalance} ETH</h4>
         </div>
       </div>
     );

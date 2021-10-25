@@ -136,20 +136,24 @@ contract NFTAuction is ERC721URIStorage{
   
     // get metadata of the token
     function getTokenMetaData(uint _tokenID) public view returns  (string memory) {
-      string memory tokenMetaData = tokenURI(_tokenID);
-      return tokenMetaData;
+        string memory tokenMetaData = tokenURI(_tokenID);
+        return tokenMetaData;
     }
   
     // get total number of tokens minted so far
     function getNumberOfTokensMinted() public view returns(uint256) {
-      uint256 totalNumberOfTokensMinted = NFTCounter;
-      return totalNumberOfTokensMinted;
+        uint256 totalNumberOfTokensMinted = NFTCounter;
+        return totalNumberOfTokensMinted;
     }
   
     // get total number of tokens owned by an address
     function getTotalNumberOfTokensOwnedByAnAddress(address _owner) public view returns(uint256) {
-      uint256 totalNumberOfTokensOwned = balanceOf(_owner);
-      return totalNumberOfTokensOwned;
+        uint256 totalNumberOfTokensOwned = balanceOf(_owner);
+        return totalNumberOfTokensOwned;
+    }
+
+    function getAuction(uint _tokenID) public view returns  (Auction memory) {
+        return AuctionsOfNFT[_tokenID];
     }
   
     function beginAuction(uint256 _tokenID, uint256 _minBid, uint _endTime) tokenExist(_tokenID) isOwner(_tokenID) public returns (bool success) {
@@ -172,6 +176,10 @@ contract NFTAuction is ERC721URIStorage{
     function increaseBid(uint256 _tokenID, uint256 newBid) tokenExist(_tokenID) notOwner(_tokenID) notEnded(_tokenID) public returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
         if (newBid <= auction.highestBid) revert();
+
+        NFT memory nft = allNFTs[_tokenID];
+        nft.price = newBid;
+        allNFTs[_tokenID] = nft;
         
         fundsByBidder[_tokenID][msg.sender] = newBid;
         auction.highestBidder = payable(msg.sender);
