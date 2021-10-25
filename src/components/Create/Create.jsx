@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-router-dom';
 import {create} from 'ipfs-http-client';
 
-let ipfs = create({
+const ipfs = create({
     host: "ipfs.infura.io",
     port: 5001,
     protocol: "https",
@@ -13,7 +13,7 @@ class Create extends React.Component {
         super(props);
         this.state = {
             NFTName: "",
-            ipfsHash: '',
+            tokenURI: '',
             buffer: null,  //Data to be sent to ipfs
         }
     }
@@ -29,19 +29,19 @@ class Create extends React.Component {
         }
     }
 
-    onSubmit = (event) => {
+    onSubmit = async(event) => {
         event.preventDefault();
         console.log("Submitting file to IPFS");
-
-        ipfs.add(this.state.buffer, (err, result) =>{
-            console.log('ipfs result', result);
-            const ipfsHash = result[0].hash;
-            this.setState({ipfsHash});
-            if (err) {
-                console.log(err);
-                return;
-            }
-        })
+            
+        let result = await ipfs.add(this.state.buffer);
+        
+        console.log('Ipfs result', result);
+        let tokenURI = `https://ipfs.infura.io/ipfs/${result.path}`;
+        console.log(tokenURI);
+        this.setState({tokenURI});
+        
+        this.props.NFTContract.methods.mintNFT(this.state.NFTName, tokenURI, 0).send({from: this.props.accountAddress, gas: '3000000'});
+        console.log("Name:"+this.state.NFTName);
     }
 
     render() {
@@ -63,12 +63,6 @@ class Create extends React.Component {
                     this.setState({ NFTName: e.target.value })
                   }
                 />
-            </form>
-            <form onSubmit={(event) => {
-                event.preventDefault();
-                let price = document.getElementById("p").value;
-                this.props.NFTContract.methods.mintNFT(this.state.NFTName, this.state.ipfsHash, price).send({from: this.props.accountAddress});
-            }}>
             </form>
             </div>
         )

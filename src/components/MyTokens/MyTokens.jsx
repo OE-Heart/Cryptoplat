@@ -36,7 +36,7 @@ const MyTokens = ({
           {myNFTs.map((NFT) => {
             return (
               <div
-                key={NFT.tokenID.toNumber()}
+                key={NFT.tokenID}
                 className="w-50 p-4 mt-1 border"
               >
                 <div className="row">

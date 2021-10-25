@@ -15,13 +15,6 @@ import MyTokens from "./components/MyTokens/MyTokens"
 
 import NFTAuction from "./build/contracts/NFTAuction.json";
 
-// const ipfsClient = require("ipfs-http-client");
-// const ipfs = ipfsClient({
-//   host: "ipfs.infura.io",
-//   port: 5001,
-//   protocol: "https",
-// });
-
 class App extends React.Component {
     constructor(props) {
         super(props);
@@ -175,7 +168,9 @@ class App extends React.Component {
                         path="/queries"
                         exact
                         render={() => (
-                            <Queries/>
+                            <Queries
+                                NFTContract={this.state.NFTContract}
+                            />
                         )}
                     />
                 </HashRouter>

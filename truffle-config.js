@@ -73,6 +73,8 @@ module.exports = {
     // }
   },
 
+  contracts_build_directory: "./src/build/contracts",
+
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
