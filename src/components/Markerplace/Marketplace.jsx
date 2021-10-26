@@ -5,8 +5,9 @@ import NFTinfo from "./NFTinfo";
 const Marketplace = ({
     NFTs,
     accountAddress,
-    NFTNum,
+    NFTCount,
     NFTContract,
+    Auctions,
 }) => {
     const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,7 @@ const Marketplace = ({
             <div className="card mt-1">
                 <div className="card-body align-items-center d-flex justify-content-center">
                     <h5>
-                        Total number of NFTs on the platform : {NFTNum}
+                        Total number of NFTs on the platform : {NFTCount}
                     </h5>
                 </div>
             </div>
@@ -42,6 +43,7 @@ const Marketplace = ({
                                 NFT={NFT}
                                 accountAddress={accountAddress}
                                 NFTContract={NFTContract}
+                                Auction={Auctions[parseInt(NFT.tokenID)-1]}
                             />
                         </div>
                     )

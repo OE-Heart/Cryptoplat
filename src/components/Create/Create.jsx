@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-router-dom';
 import {create} from 'ipfs-http-client';
 
 const ipfs = create({

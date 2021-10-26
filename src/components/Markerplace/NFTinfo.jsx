@@ -1,10 +1,6 @@
 import React from "react";
-import AuctionsOfNFT from "../../build/contracts/NFTAuction.json";
 
 class NFTinfo extends React.Component {
-    constructor(props) {
-        super(props);
-    }
 
     render() {
         return (
@@ -37,36 +33,80 @@ class NFTinfo extends React.Component {
                     <span className="font-weight-bold">Number of Transfers</span> :{" "}
                     {this.props.NFT.transNum}
                 </p>
-                {this.props.NFT.onSale ? (
-                    <div>
-                    <p>
-                        <span className="font-weight-bold">Highest Bidder</span> :{" "}
-                        {this.props.NFTContract.methods.getAuction(this.props.NFT.tokenID).highestBidder}
-                    </p>
-                    <p>
-                        <span className="font-weight-bold">Highest Bid</span> :{" "}
-                        {this.props.NFTContract.methods.getAuction(this.props.NFT.tokenID).highestBid}
-                    </p>
-                    <botton
-                        className="btn btn-outline-success mt-4 w-50"
-                        style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
-                        onClick={ () => {  //FIXME: Fail to bid now
-                            this.props.NFTContract.methods.increaseBid(this.props.NFT.tokenID, this.props.NFT.price+1).send({ from: this.props.accountAddress, gas: '3000000'}).on("confirmation", () => {
-                              window.location.reload();
-                            });
-                          }}
-                    >
-                        Bid
-                    </botton>
-                    </div>
-                ) : (
-                    <botton
-                        className="btn btn-outline-danger mt-4 w-50"
-                        style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
-                    >
-                        Not on sale
-                    </botton>
-                )}
+                {
+                    this.props.accountAddress === this.props.NFT.currentOwner ? (
+                        !this.props.NFT.onSale ? (
+                            <button
+                                className="btn btn-outline-success mt-4 w-50"
+                                style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                                onClick={ () => {
+                                    this.props.NFTContract.methods.beginAuction(this.props.NFT.tokenID, 0, 100).send({ from: this.props.accountAddress, gas: '3000000'}).on("confirmation", () => {
+                                    window.location.reload();
+                                  });
+                                }}
+                            >
+                                Sale
+                            </button>
+                        ) : (
+                            <p>
+                                <span className="font-weight-bold">End Time</span> :{" "}
+                                {this.props.Auction.endTime}
+                            </p>
+                        )
+                    ) : (
+                        this.props.NFT.onSale ? (
+                            !this.props.Auction.ended ? (
+                                <div>
+                                <p>
+                                    <span className="font-weight-bold">Highest Bidder</span> :{" "}
+                                    {this.props.Auction.highestBidder}
+                                </p>
+                                <p>
+                                    <span className="font-weight-bold">Highest Bid</span> :{" "}
+                                    {this.props.Auction.highestBid}
+                                </p>
+                                <botton
+                                    className="btn btn-outline-success mt-4 w-50"
+                                    style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                                    onClick={ () => {
+                                        this.props.NFTContract.methods.increaseBid(this.props.NFT.  tokenID,  parseInt(this.props.NFT.price)+10).send({ from: this.props.accountAddress, gas: '3000000'});
+                                      }}
+                                >
+                                    Bid
+                                </botton>
+                                </div>
+                            ) : (
+                                !this.props.Auction.claimed ? (//TODO: about time
+                                    this.props.accountAddress === this.props.Auction.highestBidder ? (
+                                        <botton
+                                            className="btn btn-outline-success mt-4 w-50"
+                                            style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                                        >
+                                            Claim
+                                        </botton>
+                                    ) : (
+                                        <botton
+                                            className="btn btn-outline-danger mt-4 w-50"
+                                            style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                                        >
+                                            Withdraw
+                                        </botton>
+                                    )
+                                ) : (
+                                    <div></div>
+                                )
+                            )
+        
+                        ) : (
+                            <botton
+                                className="btn btn-outline-danger mt-4 w-50"
+                                style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                            >
+                                Not on sale
+                            </botton>
+                        )
+                    )
+                }
             </div>
         )
     }

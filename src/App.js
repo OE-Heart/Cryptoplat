@@ -27,10 +27,10 @@ class App extends React.Component {
             loading: true,
             metamaskConnected: false,
             contractDetected: false,
-            NFTNum: 0,
             NFTNumOfAccount: 0,
             nameIsUsed: false,
             lastMintTime: null,
+            Auctions: [],
         };
     }
 
@@ -55,7 +55,7 @@ class App extends React.Component {
         const web3 = window.web3;
         const accounts = await web3.eth.getAccounts();
 
-        if (accounts.length == 0) 
+        if (accounts.length === 0) 
             this.setState({metamaskConnected: false});
         else {
             this.setState({metamaskConnected: true});
@@ -84,14 +84,16 @@ class App extends React.Component {
                 for (let i = 1; i <= NFTCount; i++) {
                     const nft = await NFTContract.methods.allNFTs(i).call();
                     this.setState({NFTs: [...this.state.NFTs, nft],});
+                    const auction = await NFTContract.methods.AuctionsOfNFT(i).call();
+                    this.setState({Auctions: [...this.state.Auctions, auction],})
                 }
-
-                let NFTNum = await NFTContract.methods.getNumberOfTokensMinted().call();
-                this.setState({NFTNum});
 
                 let NFTNumOfAccount = await NFTContract.methods.getTotalNumberOfTokensOwnedByAnAddress(this.state.accountAddress).call();
                 this.setState({NFTNumOfAccount});
                 this.setState({loading: false});
+
+                let time = await NFTContract.methods.getTime().call();
+                console.log("time:", time);
             }
         }
     }
@@ -132,8 +134,9 @@ class App extends React.Component {
                             <Marketplace 
                                 accountAddress={this.state.accountAddress}
                                 NFTs={this.state.NFTs}
-                                NFTNum={this.state.NFTNum}
+                                NFTCount={this.state.NFTCount}
                                 NFTContract={this.state.NFTContract}
+                                Auctions={this.state.Auctions}
                             />
                         )}
                     />
@@ -156,6 +159,7 @@ class App extends React.Component {
                                 NFTs={this.state.NFTs}
                                 NFTNumOfAccount={this.state.NFTNumOfAccount}
                                 NFTContract={this.state.NFTContract}
+                                Auctions={this.state.Auctions}
                             />
                         )}
                     />

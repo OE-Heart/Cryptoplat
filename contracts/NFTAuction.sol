@@ -91,6 +91,10 @@ contract NFTAuction is ERC721URIStorage{
         _;
     }
 
+    function getTime() public view returns (uint) {
+        return block.timestamp;
+    }
+
     // mint a new NFT
     function mintNFT(string memory _name, string memory  _tokenURI, uint256 _price) external notZeroAddress {
         // increment counter
@@ -140,23 +144,14 @@ contract NFTAuction is ERC721URIStorage{
         return tokenMetaData;
     }
   
-    // get total number of tokens minted so far
-    function getNumberOfTokensMinted() public view returns(uint256) {
-        uint256 totalNumberOfTokensMinted = NFTCounter;
-        return totalNumberOfTokensMinted;
-    }
-  
     // get total number of tokens owned by an address
     function getTotalNumberOfTokensOwnedByAnAddress(address _owner) public view returns(uint256) {
         uint256 totalNumberOfTokensOwned = balanceOf(_owner);
         return totalNumberOfTokensOwned;
     }
-
-    function getAuction(uint _tokenID) public view returns  (Auction memory) {
-        return AuctionsOfNFT[_tokenID];
-    }
   
-    function beginAuction(uint256 _tokenID, uint256 _minBid, uint _endTime) tokenExist(_tokenID) isOwner(_tokenID) public returns (bool success) {
+    function beginAuction(uint256 _tokenID, uint256 _minBid, uint _duration) tokenExist(_tokenID) isOwner(_tokenID) public returns (bool success) {
+        uint _endTime = block.timestamp+_duration;
         NFT memory nft = allNFTs[_tokenID];
         nft.onSale = true;
         Auction memory newAuction = Auction(
