@@ -31,12 +31,32 @@ class App extends React.Component {
             nameIsUsed: false,
             lastMintTime: null,
             Auctions: [],
+            currentTime: null,
         };
+    }
+
+    componentDidMount() {
+        this.timerID = setInterval(
+            () => this.tick(),
+            1000
+        );
     }
 
     componentWillMount = async () => {
         await this.loadWeb3();
         await this.loadBlockChain();
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
+    }
+
+    tick = async() => {
+        if (this.state.NFTContract) {
+            let currentTime = await this.state.NFTContract.methods.getTime().call();
+            console.log("time:", currentTime);
+            this.setState({currentTime});
+        }
     }
 
     loadWeb3 = async () => {
@@ -91,9 +111,6 @@ class App extends React.Component {
                 let NFTNumOfAccount = await NFTContract.methods.getTotalNumberOfTokensOwnedByAnAddress(this.state.accountAddress).call();
                 this.setState({NFTNumOfAccount});
                 this.setState({loading: false});
-
-                let time = await NFTContract.methods.getTime().call();
-                console.log("time:", time);
             }
         }
     }
@@ -160,6 +177,7 @@ class App extends React.Component {
                                 NFTNumOfAccount={this.state.NFTNumOfAccount}
                                 NFTContract={this.state.NFTContract}
                                 Auctions={this.state.Auctions}
+                                currentTime={this.state.currentTime}
                             />
                         )}
                     />
@@ -175,7 +193,11 @@ class App extends React.Component {
                         exact
                         render={() => (
                             <Queries
-                                NFTContract={this.state.NFTContract}
+                            accountAddress={this.state.accountAddress}
+                            NFTs={this.state.NFTs}
+                            NFTCount={this.state.NFTCount}
+                            NFTContract={this.state.NFTContract}
+                            Auctions={this.state.Auctions}
                             />
                         )}
                     />

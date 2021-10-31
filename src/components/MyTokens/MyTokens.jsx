@@ -8,6 +8,7 @@ const MyTokens = ({
     NFTNumOfAccount,
     NFTContract,
     Auctions,
+    currentTime,
   }) => {
     const [loading, setLoading] = useState(false);
     const [myNFTs, setMyNFTs] = useState([]);
@@ -49,6 +50,7 @@ const MyTokens = ({
                     accountAddress={accountAddress}
                     NFTContract={NFTContract}
                     Auction={Auctions[parseInt(NFT.tokenID)-1]}
+                    currentTime={currentTime}
                   />
                 </div>
               </div>

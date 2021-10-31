@@ -185,13 +185,10 @@ contract NFTAuction is ERC721URIStorage{
 
     function endAuction(uint256 _tokenID) tokenExist(_tokenID) public returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
-        if (block.timestamp < auction.endTime) revert();
+        require(block.timestamp >= auction.endTime, "Auction not yet ended.");
 
-        NFT memory nft = allNFTs[_tokenID];
-        nft.onSale = false;
         auction.ended = true;
 
-        allNFTs[_tokenID] = nft;
         AuctionsOfNFT[_tokenID] = auction;
         return true;
     }
@@ -218,7 +215,8 @@ contract NFTAuction is ERC721URIStorage{
 
     function claimNFT(uint256 _tokenID) public payable tokenExist(_tokenID) notZeroAddress returns (bool success) {
         Auction memory auction = AuctionsOfNFT[_tokenID];
-        require(auction.ended);
+        // require(auction.ended);
+        require(auction.ended, "Auction not yet ended.");
         require(!auction.claimed);
         require(msg.sender == auction.highestBidder);
         // get the token's owner
@@ -228,14 +226,15 @@ contract NFTAuction is ERC721URIStorage{
 
         NFT memory nft = allNFTs[_tokenID];
         _transfer(tokenOwner, msg.sender, _tokenID);
-        // get owner of the token
-        address payable sendTo = nft.currentOwner;
+        // // get owner of the token
+        // address payable sendTo = nft.currentOwner;
         // send token's worth of ethers to the owner
-        sendTo.transfer(msg.value);
+        payable(tokenOwner).transfer(msg.value);
         nft.previousOwner = nft.currentOwner;
         nft.currentOwner = payable(msg.sender);
         nft.price = auction.highestBid;
-        nft.transNum++;
+        nft.transNum += 1;
+        nft.onSale = false;
         allNFTs[_tokenID] = nft;
         return true;
     }

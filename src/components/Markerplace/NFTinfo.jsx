@@ -1,6 +1,9 @@
 import React from "react";
 
 class NFTinfo extends React.Component {
+    constructor(props) {
+        super(props);
+    }
 
     render() {
         return (
@@ -40,9 +43,11 @@ class NFTinfo extends React.Component {
                                 className="btn btn-outline-success mt-4 w-50"
                                 style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
                                 onClick={ () => {
-                                    this.props.NFTContract.methods.beginAuction(this.props.NFT.tokenID, 0, 100).send({ from: this.props.accountAddress, gas: '3000000'}).on("confirmation", () => {
-                                    window.location.reload();
-                                  });
+                                    let minBid = prompt("Please input minBid");
+                                    let duration = prompt("Please input duration");
+                                    this.props.NFTContract.methods.beginAuction(this.props.NFT.tokenID, minBid, duration).send({ from: this.props.accountAddress, gas: '3000000'}).on("confirmation", () => {
+                                        window.location.reload();
+                                    });
                                 }}
                             >
                                 Sale
@@ -69,18 +74,22 @@ class NFTinfo extends React.Component {
                                     className="btn btn-outline-success mt-4 w-50"
                                     style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
                                     onClick={ () => {
-                                        this.props.NFTContract.methods.increaseBid(this.props.NFT.  tokenID,  parseInt(this.props.NFT.price)+10).send({ from: this.props.accountAddress, gas: '3000000'});
+                                        let bid = prompt("Please input your bid");
+                                        this.props.NFTContract.methods.increaseBid(this.props.NFT.tokenID, bid).send({ from: this.props.accountAddress, gas: '3000000'});
                                       }}
                                 >
                                     Bid
                                 </botton>
                                 </div>
                             ) : (
-                                !this.props.Auction.claimed ? (//TODO: about time
+                                !this.props.Auction.claimed ? (
                                     this.props.accountAddress === this.props.Auction.highestBidder ? (
                                         <botton
                                             className="btn btn-outline-success mt-4 w-50"
                                             style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
+                                            onClick={ () =>{
+                                                this.props.NFTContract.methods.claimNFT(this.props.NFT.tokenID).send({from: this.props.accountAddress, gas: '3000000'});
+                                            }}
                                         >
                                             Claim
                                         </botton>
@@ -89,7 +98,7 @@ class NFTinfo extends React.Component {
                                             className="btn btn-outline-danger mt-4 w-50"
                                             style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
                                         >
-                                            Withdraw
+                                            Waiting for claimed
                                         </botton>
                                     )
                                 ) : (
