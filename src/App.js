@@ -12,6 +12,7 @@ import Marketplace from "./components/Markerplace/Marketplace";
 import Create from "./components/Create/Create";
 import Queries from "./components/Queries/Queries";
 import MyTokens from "./components/MyTokens/MyTokens"
+import MyAuctions from "./components/MyAuctions/MyAuctions";
 
 import NFTAuction from "./build/contracts/NFTAuction.json";
 
@@ -54,7 +55,7 @@ class App extends React.Component {
     tick = async() => {
         if (this.state.NFTContract) {
             let currentTime = await this.state.NFTContract.methods.getTime().call();
-            console.log("time:", currentTime);
+            // console.log("time:", currentTime);
             this.setState({currentTime});
         }
     }
@@ -181,23 +182,29 @@ class App extends React.Component {
                             />
                         )}
                     />
-                    <Route
+                    {/* <Route
                         path="/my-auctions"
                         exact
                         render={() => (
-                            <div>My Auctions</div>
+                            <MyAuctions
+                                accountAddress={this.state.accountAddress}
+                                NFTs={this.state.NFTs}
+                                NFTCount={this.state.NFTCount}
+                                NFTContract={this.state.NFTContract}
+                                Auctions={this.state.Auctions}
+                            />
                         )}
-                    />
+                    /> */}
                     <Route
                         path="/queries"
                         exact
                         render={() => (
                             <Queries
-                            accountAddress={this.state.accountAddress}
-                            NFTs={this.state.NFTs}
-                            NFTCount={this.state.NFTCount}
-                            NFTContract={this.state.NFTContract}
-                            Auctions={this.state.Auctions}
+                                accountAddress={this.state.accountAddress}
+                                NFTs={this.state.NFTs}
+                                NFTCount={this.state.NFTCount}
+                                NFTContract={this.state.NFTContract}
+                                Auctions={this.state.Auctions}
                             />
                         )}
                     />

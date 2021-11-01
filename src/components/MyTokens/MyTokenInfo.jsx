@@ -7,15 +7,15 @@ class MyTokenInfo extends React.Component {
 
     render() {
         return (
-            <div className="col-md-6 text-center">
-                    <div key={this.props.NFT.tokenID} className="mt-4 ml-3">
+            <div className="col-md-6">
+                    <div key={this.props.NFT.tokenID} className="mt-4">
                       <p>
                         <span className="font-weight-bold">tokenID</span> :{" "}
                         {this.props.NFT.tokenID}
                       </p>
                       <p>
                         <span className="font-weight-bold">Name</span> :{" "}
-                        {this.props.NFT.currentOwnertokenName}
+                        {this.props.NFT.tokenName}
                       </p>
                       <p>
                         <span className="font-weight-bold">Price</span> :{" "}

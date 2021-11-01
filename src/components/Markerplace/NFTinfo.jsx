@@ -88,7 +88,7 @@ class NFTinfo extends React.Component {
                                             className="btn btn-outline-success mt-4 w-50"
                                             style={{ fontSize: "0.8rem", letterSpacing: "0.14rem" }}
                                             onClick={ () =>{
-                                                this.props.NFTContract.methods.claimNFT(this.props.NFT.tokenID).send({from: this.props.accountAddress, gas: '3000000'});
+                                                this.props.NFTContract.methods.claimNFT(this.props.NFT.tokenID).send({from: this.props.accountAddress, value: this.props.Auction.highestBid, gas: '3000000'});
                                             }}
                                         >
                                             Claim

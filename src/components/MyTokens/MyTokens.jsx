@@ -43,7 +43,6 @@ const MyTokens = ({
                 key={NFT.tokenID}
                 className="w-50 p-4 mt-1 border"
               >
-                <div className="row">
                   <img src={NFT.tokenURI} id="preview_img" width="150px" height="200px" alt=""/>
                   <MyTokenInfo
                     NFT={NFT}
@@ -52,7 +51,6 @@ const MyTokens = ({
                     Auction={Auctions[parseInt(NFT.tokenID)-1]}
                     currentTime={currentTime}
                   />
-                </div>
               </div>
             );
           })}

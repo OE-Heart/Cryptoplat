@@ -46,23 +46,27 @@ class Create extends React.Component {
     render() {
         return (
             <div>
-            <div className="jumbotron">
-                <h1 className="display-5">Create your NFT</h1>
-            </div>
-            <form onSubmit={this.onSubmit}>
-                <input type="file" onChange={this.chooseFile}/>
-                <input type="submit" value="Submit"/>
-                <input
-                  required
-                  type="text"
-                  value={this.state.NFTName}
-                  className="form-control"
-                  placeholder="Enter Your NFT's Name"
-                  onChange={(e) =>
-                    this.setState({ NFTName: e.target.value })
-                  }
-                />
-            </form>
+                <div className="jumbotron">
+                    <h1 className="display-5">Create your NFT</h1>
+                </div>
+                <div className="p-4 mt-1 border">
+                    <form onSubmit={this.onSubmit}>
+                        <input type="file" onChange={this.chooseFile}/>
+                        <input
+                          required
+                          type="text"
+                          value={this.state.NFTName}
+                          className="form-control"
+                          placeholder="Enter Your NFT's Name"
+                          onChange={(e) =>
+                            this.setState({ NFTName: e.target.value })
+                          }
+                        />
+                        <button className="mt-3 btn btn-outline-primary" type="submit">
+                            Submit
+                        </button>
+                    </form>
+                </div>
             </div>
         )
     };

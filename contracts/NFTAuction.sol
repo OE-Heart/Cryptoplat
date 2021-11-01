@@ -38,6 +38,8 @@ contract NFTAuction is ERC721URIStorage{
     mapping(uint256 => NFT) public allNFTs;
     mapping(uint256 => Auction) public AuctionsOfNFT;
     mapping(uint256 => mapping(address => uint256)) public fundsByBidder; //map tokenID to fundsByBidder
+    mapping(address => uint256[]) public attendAuctions;
+    mapping(address => uint) public attendAuctionsNum;
 
     // check if token name exists
     mapping(string => bool) public tokenNameExists;
@@ -176,6 +178,8 @@ contract NFTAuction is ERC721URIStorage{
         nft.price = newBid;
         allNFTs[_tokenID] = nft;
         
+        attendAuctionsNum[msg.sender] += 1;
+        attendAuctions[msg.sender].push(_tokenID);
         fundsByBidder[_tokenID][msg.sender] = newBid;
         auction.highestBidder = payable(msg.sender);
         auction.highestBid = newBid;
@@ -190,26 +194,6 @@ contract NFTAuction is ERC721URIStorage{
         auction.ended = true;
 
         AuctionsOfNFT[_tokenID] = auction;
-        return true;
-    }
-
-    function withdraw(uint256 _tokenID) public tokenExist(_tokenID) notOwner(_tokenID) returns (bool success) {
-        Auction memory auction = AuctionsOfNFT[_tokenID];
-        if (!auction.ended) revert();
-        if (msg.sender == auction.highestBidder) revert();
-        address payable withdrawAccount;
-        uint withdrawAmount;
-
-        withdrawAccount = payable(msg.sender);
-        withdrawAmount = fundsByBidder[_tokenID][withdrawAccount];
-
-        if (withdrawAmount == 0) revert();
-
-        fundsByBidder[_tokenID][withdrawAccount] = 0;
-        if (!payable(msg.sender).send(withdrawAmount)) {
-            fundsByBidder[_tokenID][withdrawAccount] = withdrawAmount;
-            return false;
-        }
         return true;
     }
 
