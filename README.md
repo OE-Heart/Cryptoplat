@@ -2,6 +2,8 @@
 
 An NFT Auction Platform where you can mint your ERC721 implemented NFTs and deal with them on the Ethereum Blockchain.
 
+Running website demo: https://www.bilibili.com/video/BV1jf4y1u76m/
+
 ### Stack
 - [Solidity](https://docs.soliditylang.org/en/v0.7.6/) - Object-oriented, high-level language for implementing smart contracts.
 - [Bootstrap 4](https://getbootstrap.com/) - CSS framework for faster and easier web development.
