@@ -1,6 +1,6 @@
 # Cryptoplat
 
-An NFT Auction Platform where you can mint your ERC721 implemented NFTs and deal with them on the Ethereum Blockchain.
+A toy NFT Auction Platform where you can mint your ERC721 implemented NFTs and deal with them on the Ethereum Blockchain.
 
 Running website demo: https://www.bilibili.com/video/BV1jf4y1u76m/
 
